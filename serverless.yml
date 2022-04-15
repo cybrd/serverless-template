@@ -3,44 +3,49 @@ service: serverless-template
 plugins:
   - serverless-plugin-typescript
 
+package:
+  patterns:
+    - "!node_modules/aws-sdk/**"
+
 provider:
   name: aws
   runtime: nodejs14.x
-  region: ap-northeast-1
+  region: us-east-1
+  deploymentBucket:
+    name: deployments.bryansuralta
+    blockPublicAccess: true
+
   profile: serverless-template
   iam:
     role:
       statements:
         - Effect: "Allow"
           Action:
-            - dynamodb:Scan
+            - dynamodb:*
           Resource: "*"
 
 functions:
   scan:
-    handler: src/handler.scan
-    events:
-      - http:
-          path: /scan/{id}
-          method: get
-          cors: true
-      - http:
-          path: /scan/
-          method: get
-          cors: true
+    handler: src/handlers/user.get
+    url:
+      cors: true
 
 resources:
   Resources:
     usersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: serverless-example-template
+        TableName: serverless-template-dynamodb
         AttributeDefinitions:
+          - AttributeName: user
+            AttributeType: S
           - AttributeName: email
             AttributeType: S
         KeySchema:
-          - AttributeName: email
+          - AttributeName: user
             KeyType: HASH
+          - AttributeName: email
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
