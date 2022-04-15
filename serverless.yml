@@ -2,6 +2,7 @@ service: serverless-template
 
 plugins:
   - serverless-plugin-typescript
+  - serverless-domain-manager
 
 package:
   patterns:
@@ -24,11 +25,21 @@ provider:
             - dynamodb:*
           Resource: "*"
 
+custom:
+  customDomain:
+    http:
+      domainName: api.template.bryansuralta.com
+      endpointType: "regional"
+
 functions:
-  scan:
-    handler: src/handlers/user.get
-    url:
-      cors: true
+  findByUserHandler:
+    handler: src/handlers/user.findByUserHandler
+    events:
+      - httpApi: "POST /findByUserHandler"
+  findByEmailHandler:
+    handler: src/handlers/user.findByEmailHandler
+    events:
+      - httpApi: "POST /findByEmailHandler"
 
 resources:
   Resources:
