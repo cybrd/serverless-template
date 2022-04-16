@@ -1,48 +1,55 @@
-import { QueryCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import {
+  QueryCommand,
+  ScanCommand,
+  AttributeValue,
+  PutItemCommand,
+} from "@aws-sdk/client-dynamodb";
 import { ddbClient } from "../config";
 
-export const findByUser = async (id: string) => {
-  let key = {
-    user: { S: id },
-  };
+type findByUserParam = {
+  user: AttributeValue;
+  [key: string]: AttributeValue;
+};
+export const findByUser = (params: findByUserParam) => {
+  const command = new QueryCommand({
+    TableName: "serverless-template-dynamodb",
+    KeyConditionExpression: "#user = :user",
+    ExpressionAttributeValues: {
+      ":user": params.user,
+    },
+    ExpressionAttributeNames: { "#user": "user" },
+    Limit: 1000,
+  });
 
-  try {
-    const command = new QueryCommand({
-      TableName: "serverless-template-dynamodb",
-      KeyConditionExpression: "#user = :user",
-      ExpressionAttributeValues: {
-        ":user": key.user,
-      },
-      ExpressionAttributeNames: { "#user": "user" },
-      Limit: 1000,
-    });
-
-    return ddbClient.send(command);
-  } catch (err) {
-    console.error(err);
-    return err;
-  }
+  return ddbClient.send(command);
 };
 
-export const findByEmail = async (id: string) => {
-  let key = {
-    email: { S: id },
-  };
+type findByEmailParam = {
+  email: AttributeValue;
+  [key: string]: AttributeValue;
+};
+export const findByEmail = (params: findByEmailParam) => {
+  const command = new ScanCommand({
+    TableName: "serverless-template-dynamodb",
+    FilterExpression: "email = :email",
+    ExpressionAttributeValues: {
+      ":email": params.email,
+    },
+    Limit: 1000,
+  });
 
-  try {
-    const command = new ScanCommand({
-      TableName: "serverless-template-dynamodb",
-      FilterExpression: "#user = :user",
-      ExpressionAttributeValues: {
-        ":user": key.email,
-      },
-      ExpressionAttributeNames: { "#user": "user" },
-      Limit: 1000,
-    });
+  return ddbClient.send(command);
+};
 
-    return ddbClient.send(command);
-  } catch (err) {
-    console.error(err);
-    return err;
-  }
+type insertParam = {
+  user: { S: string };
+  email: { S: string };
+};
+export const insert = (item: insertParam) => {
+  const command = new PutItemCommand({
+    TableName: "serverless-template-dynamodb",
+    Item: item,
+  });
+
+  return ddbClient.send(command);
 };
